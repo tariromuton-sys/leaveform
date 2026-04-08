@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOA Leave Management System</title>
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f3;
+    --color-background-tertiary: #eeece6;
+    --color-background-danger: #fcebeb;
+    --color-background-success: #eaf3de;
+    --color-background-warning: #faeeda;
+    --color-background-info: #e6f1fb;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #6b6b67;
+    --color-text-tertiary: #9b9b97;
+    --color-text-danger: #a32d2d;
+    --color-text-success: #3b6d11;
+    --color-text-warning: #854f0b;
+    --color-text-info: #185fa5;
+    --color-border-tertiary: rgba(0,0,0,0.12);
+    --color-border-secondary: rgba(0,0,0,0.22);
+    --color-border-primary: rgba(0,0,0,0.32);
+    --color-border-danger: #f09595;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--color-background-tertiary); min-height: 100vh; padding: 24px 16px; }
+  .app { max-width: 900px; margin: 0 auto; padding: 1rem 0; font-family: var(--font-sans); }
+  .nav { display: flex; gap: 4px; margin-bottom: 1.5rem; border-bottom: 0.5px solid var(--color-border-tertiary); flex-wrap: wrap; }
+  .nav-btn { padding: 8px 16px; font-size: 13px; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: var(--color-text-secondary); margin-bottom: -1px; transition: all 0.15s; }
+  .nav-btn.active { color: var(--color-text-primary); border-bottom-color: #1D9E75; }
+  .nav-btn:hover:not(.active) { color: var(--color-text-primary); }
+  .tab { display: none; } .tab.active { display: block; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .section-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-secondary); margin-bottom: 12px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+  label { display: block; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; font-weight: 500; }
+  input, select, textarea { width: 100%; font-size: 13px; padding: 8px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); font-family: var(--font-sans); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #1D9E75; box-shadow: 0 0 0 2px rgba(29,158,117,0.15); }
+  textarea { resize: vertical; min-height: 60px; }
+  .form-group { margin-bottom: 14px; }
+  .btn { padding: 8px 16px; font-size: 13px; font-weight: 500; border-radius: var(--border-radius-md); cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); transition: all 0.15s; font-family: var(--font-sans); }
+  .btn:hover { background: var(--color-background-secondary); }
+  .btn-primary { background: #1D9E75; color: white; border-color: #1D9E75; }
+  .btn-primary:hover { background: #0F6E56; }
+  .btn-danger { background: var(--color-background-danger); color: var(--color-text-danger); border-color: var(--color-border-danger); }
+  .btn-pdf { background: #185FA5; color: white; border-color: #185FA5; font-size: 12px; padding: 5px 12px; }
+  .btn-pdf:hover { background: #0C447C; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge-pending { background: #FAEEDA; color: #854F0B; }
+  .badge-approved { background: #EAF3DE; color: #3B6D11; }
+  .badge-rejected { background: #FCEBEB; color: #A32D2D; }
+  .badge-annual { background: #E6F1FB; color: #185FA5; }
+  .badge-sick { background: #FCEBEB; color: #A32D2D; }
+  .badge-unpaid { background: #F1EFE8; color: #5F5E5A; }
+  .badge-compassionate { background: #FBEAF0; color: #993556; }
+  .badge-study { background: #EEEDFE; color: #534AB7; }
+  .badge-maternity { background: #FBEAF0; color: #993556; }
+  .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 16px; }
+  .metric-label { font-size: 11px; color: var(--color-text-secondary); font-weight: 500; margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .metric-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .person-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .person-row:last-child { border-bottom: none; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+  .av-zw { background: #E1F5EE; color: #0F6E56; } .av-zm { background: #EEEDFE; color: #534AB7; }
+  .person-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); } .person-role { font-size: 11px; color: var(--color-text-secondary); } .person-info { flex: 1; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-in { background: #639922; } .dot-out { background: #E24B4A; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-top: 8px; }
+  .cal-day-hdr { text-align: center; font-size: 10px; color: var(--color-text-secondary); padding: 2px; font-weight: 500; }
+  .cal-day { text-align: center; font-size: 11px; padding: 4px 2px; border-radius: 4px; color: var(--color-text-primary); }
+  .cal-day.today { background: #1D9E75; color: white; font-weight: 500; }
+  .cal-day.leave { background: #FAEEDA; color: #854F0B; }
+  .cal-day.empty { opacity: 0; }
+  .request-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 14px; margin-bottom: 10px; background: var(--color-background-primary); }
+  .request-meta { font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; margin-left: 36px; }
+  .request-actions { display: flex; gap: 6px; margin-top: 10px; align-items: center; }
+  .leave-type-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+  .leave-type-opt { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px; cursor: pointer; text-align: center; transition: all 0.15s; background: var(--color-background-primary); }
+  .leave-type-opt.selected { border-color: #1D9E75; background: #E1F5EE; }
+  .lt-icon { font-size: 18px; margin-bottom: 4px; } .lt-name { font-size: 11px; font-weight: 500; color: var(--color-text-primary); } .lt-balance { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
+  .toast { position: fixed; bottom: 20px; right: 20px; background: #1D9E75; color: white; padding: 10px 16px; border-radius: var(--border-radius-md); font-size: 13px; font-weight: 500; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .progress-bar { height: 4px; background: var(--color-background-secondary); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; background: #1D9E75; }
+  .progress-fill.warn { background: #EF9F27; } .progress-fill.danger { background: #E24B4A; }
+  .empty-state { text-align: center; padding: 2rem; color: var(--color-text-secondary); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; padding: 6px 8px; font-size: 11px; font-weight: 500; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); }
+  td { padding: 8px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  @media (max-width: 600px) { .grid-4 { grid-template-columns: repeat(2,1fr); } .leave-type-grid { grid-template-columns: repeat(2,1fr); } .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+    <div>
+      <div style="font-size:18px;font-weight:500;color:var(--color-text-primary);">TA Leave Portal</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px;">Labour Outsourcing Africa · Global Talent Acquisition</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px;font-weight:500;color:#1D9E75;">Tari Mutepfa</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);">Supervisor view</div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showTab('dashboard',this)">Dashboard</button>
+    <button class="nav-btn" onclick="showTab('apply',this)">Apply for Leave</button>
+    <button class="nav-btn" onclick="showTab('approvals',this)">Approvals <span id="pending-badge" style="background:#FAEEDA;color:#854F0B;border-radius:10px;padding:1px 6px;font-size:11px;margin-left:4px;">0</span></button>
+    <button class="nav-btn" onclick="showTab('balances',this)">Team Balances</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="tab active">
+    <div class="grid-4" style="margin-bottom:1rem;">
+      <div class="metric"><div class="metric-label">In office today</div><div class="metric-value" id="m-in">—</div><div class="metric-sub">across all offices</div></div>
+      <div class="metric"><div class="metric-label">On leave today</div><div class="metric-value" id="m-out" style="color:#E24B4A;">—</div><div class="metric-sub">approved absences</div></div>
+      <div class="metric"><div class="metric-label">Pending requests</div><div class="metric-value" id="m-pending" style="color:#BA7517;">—</div><div class="metric-sub">awaiting approval</div></div>
+      <div class="metric"><div class="metric-label">Requests this month</div><div class="metric-value" id="m-month">—</div><div class="metric-sub">April 2026</div></div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="card"><div class="section-title">🇿🇼 Zimbabwe office</div><div id="zw-roster"></div></div>
+        <div class="card"><div class="section-title">🇿🇲 Zambia office</div><div id="zm-roster"></div></div>
+      </div>
+      <div class="card">
+        <div class="section-title">April 2026 — leave calendar</div>
+        <div class="cal-grid" id="cal-headers"></div>
+        <div class="cal-grid" id="cal-days"></div>
+        <div style="margin-top:12px;display:flex;gap:12px;">
+          <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#1D9E75;display:inline-block;"></span> Today</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#FAEEDA;display:inline-block;"></span> Leave day</div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="section-title">Recent leave activity</div><div id="recent-activity"></div></div>
+  </div>
+
+  <!-- APPLY -->
+  <div id="tab-apply" class="tab">
+    <div class="card">
+      <div class="section-title">New leave request</div>
+      <div class="form-group"><label>Applying as</label><select id="apply-as" onchange="updateApplyBalance()"></select></div>
+      <div class="form-group"><label>Type of leave</label><div class="leave-type-grid" id="leave-type-grid"></div></div>
+      <div class="grid-2">
+        <div class="form-group"><label>From date</label><input type="date" id="leave-from" onchange="calcDays()"></div>
+        <div class="form-group"><label>To date</label><input type="date" id="leave-to" onchange="calcDays()"></div>
+      </div>
+      <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;margin-bottom:14px;display:flex;gap:24px;flex-wrap:wrap;">
+        <div><div class="metric-label">Working days requested</div><div style="font-size:18px;font-weight:500;" id="days-count">0</div></div>
+        <div><div class="metric-label">Current annual balance</div><div style="font-size:18px;font-weight:500;color:#1D9E75;" id="bal-preview">—</div></div>
+        <div><div class="metric-label">Balance after request</div><div style="font-size:18px;font-weight:500;" id="bal-after">—</div></div>
+      </div>
+      <div class="form-group"><label>Cover during absence</label><select id="cover-person"></select></div>
+      <div class="form-group"><label>Is cover person aware?</label><select id="cover-aware"><option value="yes">Yes</option><option value="no">No — I will notify them</option></select></div>
+      <div class="form-group"><label>Notes (optional)</label><textarea id="leave-notes" placeholder="Any additional context for your supervisor..."></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn" onclick="clearForm()">Clear</button>
+        <button class="btn btn-primary" onclick="submitLeave()">Submit for approval</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPROVALS -->
+  <div id="tab-approvals" class="tab">
+    <div style="display:flex;gap:8px;margin-bottom:1rem;">
+      <button class="btn btn-sm" id="filter-pending" onclick="filterApprovals('pending',this)" style="border-color:#1D9E75;color:#1D9E75;">Pending</button>
+      <button class="btn btn-sm" id="filter-all" onclick="filterApprovals('all',this)">All requests</button>
+    </div>
+    <div id="approvals-list"></div>
+  </div>
+
+  <!-- BALANCES -->
+  <div id="tab-balances" class="tab">
+    <div class="card"><div class="section-title">Team leave balances — April 2026</div>
+      <div style="overflow-x:auto;">
+        <table><thead><tr><th>Name</th><th>Office</th><th>Entitled</th><th>Accrued total</th><th>Taken</th><th>Remaining</th><th>Sick days</th></tr></thead>
+        <tbody id="balances-body"></tbody></table>
+      </div>
+    </div>
+    <div class="card"><div class="section-title">Balance health</div><div id="balance-health"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TEAM = [
+  { id:1, name:'Tariro Mutepfa', initials:'TM', office:'zw', role:'Global TA Director', annualEntitled:22, bfwd:4.19, accrued:1.83, taken:0.83, sick:1, isSupervisor:true },
+  { id:2, name:'Chimphondah N', initials:'CN', office:'zw', role:'TA Specialist', annualEntitled:22, bfwd:3.18, accrued:1.83, taken:0.83, sick:1 },
+  { id:3, name:'Sean Kaboti', initials:'SK', office:'zw', role:'TA Specialist', annualEntitled:22, bfwd:3.35, accrued:1.83, taken:0.83, sick:1 },
+  { id:4, name:'Kankwasa C', initials:'KC', office:'zw', role:'TA Specialist', annualEntitled:22, bfwd:13.10, accrued:1.83, taken:7.83, sick:0 },
+  { id:5, name:'Majuta V', initials:'MV', office:'zw', role:'TA Specialist', annualEntitled:22, bfwd:2.12, accrued:1.83, taken:1.83, sick:1 },
+  { id:6, name:'Muchadura T', initials:'MT', office:'zw', role:'TA Specialist', annualEntitled:22, bfwd:12.07, accrued:1.83, taken:3.83, sick:0 },
+  { id:7, name:'Mutonhori T', initials:'MT2', office:'zw', role:'TA Lead', annualEntitled:22, bfwd:5.02, accrued:1.83, taken:0.83, sick:0 },
+  { id:8, name:'Angelina Mulenga', initials:'AM', office:'zm', role:'TA Specialist', annualEntitled:22, bfwd:0, accrued:4, taken:0, sick:1 },
+  { id:9, name:'Nalishebo Muuka', initials:'NM', office:'zm', role:'TA Specialist', annualEntitled:22, bfwd:0, accrued:4, taken:0, sick:1 }
+];
+
+const LEAVE_TYPES = [
+  { key:'annual', label:'Annual', icon:'☀️', usesBalance:true },
+  { key:'sick', label:'Sick', icon:'🩺', usesBalance:false },
+  { key:'unpaid', label:'Unpaid', icon:'⏸', usesBalance:false },
+  { key:'compassionate', label:'Compassionate', icon:'🤍', usesBalance:false },
+  { key:'study', label:'Study', icon:'📚', usesBalance:false },
+  { key:'maternity', label:'Maternity', icon:'👶', usesBalance:false }
+];
+
+const DEFAULT_REQUESTS = [
+  { id:'R001', memberId:2, type:'annual', from:'2026-04-10', to:'2026-04-10', days:1, cover:3, coverAware:true, notes:'Short break.', status:'pending', submitted:'2026-04-07' },
+  { id:'R002', memberId:6, type:'sick', from:'2026-04-08', to:'2026-04-09', days:2, cover:3, coverAware:true, notes:'', status:'pending', submitted:'2026-04-08' },
+  { id:'R003', memberId:4, type:'annual', from:'2026-03-20', to:'2026-03-21', days:2, cover:2, coverAware:true, notes:'', status:'approved', submitted:'2026-03-18', decidedBy:'Tari Mutepfa', decidedOn:'2026-03-18' }
+];
+
+let requests = [];
+let selectedLeaveType = 'annual';
+let approvalsFilter = 'pending';
+
+function getBalance(m) { return parseFloat((m.bfwd + m.accrued - m.taken).toFixed(2)); }
+
+function loadRequests() {
+  try {
+    const saved = localStorage.getItem('loa-leave-requests');
+    requests = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_REQUESTS));
+  } catch(e) {
+    requests = JSON.parse(JSON.stringify(DEFAULT_REQUESTS));
+  }
+  updateBadge();
+  renderDashboard();
+}
+
+function saveRequests() {
+  try { localStorage.setItem('loa-leave-requests', JSON.stringify(requests)); } catch(e) {}
+}
+
+function updateBadge() {
+  const p = requests.filter(r => r.status === 'pending').length;
+  document.getElementById('pending-badge').textContent = p;
+  const me = document.getElementById('m-pending');
+  if (me) me.textContent = p;
+}
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'apply') renderApplyForm();
+  if (tab === 'approvals') renderApprovals();
+  if (tab === 'balances') renderBalances();
+}
+
+function toast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = color || '#1D9E75';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function memberOnLeaveToday(m) {
+  const today = new Date().toISOString().split('T')[0];
+  return requests.some(r => r.memberId === m.id && r.status === 'approved' && r.from <= today && r.to >= today);
+}
+
+function renderDashboard() {
+  const inOffice = TEAM.filter(m => !memberOnLeaveToday(m)).length;
+  const onLeave = TEAM.filter(m => memberOnLeaveToday(m)).length;
+  const pending = requests.filter(r => r.status === 'pending').length;
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthReqs = requests.filter(r => r.submitted && r.submitted.startsWith(monthStr)).length;
+  document.getElementById('m-in').textContent = inOffice;
+  document.getElementById('m-out').textContent = onLeave;
+  document.getElementById('m-pending').textContent = pending;
+  document.getElementById('m-month').textContent = monthReqs;
+  ['zw','zm'].forEach(office => {
+    const members = TEAM.filter(m => m.office === office);
+    document.getElementById(office + '-roster').innerHTML = members.map(m => {
+      const out = memberOnLeaveToday(m);
+      return `<div class="person-row">
+        <div class="avatar av-${office}">${m.initials}</div>
+        <div class="person-info"><div class="person-name">${m.name}</div><div class="person-role">${m.role}</div></div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="status-dot ${out ? 'dot-out' : 'dot-in'}"></div>
+          <span style="font-size:11px;color:var(--color-text-secondary);">${out ? 'On leave' : 'In office'}</span>
+        </div>
+      </div>`;
+    }).join('');
+  });
+  renderCalendar();
+  renderRecentActivity();
+}
+
+function renderCalendar() {
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  document.getElementById('cal-headers').innerHTML = days.map(d => `<div class="cal-day-hdr">${d}</div>`).join('');
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayNum = now.getDate();
+  const leaveDays = new Set();
+  requests.filter(r => r.status === 'approved').forEach(r => {
+    const from = new Date(r.from + 'T00:00:00'), to = new Date(r.to + 'T00:00:00');
+    for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
+      if (d.getMonth() === month && d.getFullYear() === year) leaveDays.add(d.getDate());
+    }
+  });
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty">.</div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const cls = d === todayNum ? 'today' : leaveDays.has(d) ? 'leave' : '';
+    html += `<div class="cal-day ${cls}">${d}</div>`;
+  }
+  document.getElementById('cal-days').innerHTML = html;
+}
+
+function renderRecentActivity() {
+  const sorted = [...requests].sort((a,b) => b.submitted.localeCompare(a.submitted)).slice(0,5);
+  const el = document.getElementById('recent-activity');
+  if (!sorted.length) { el.innerHTML = '<div class="empty-state">No activity yet.</div>'; return; }
+  el.innerHTML = sorted.map(r => {
+    const m = TEAM.find(t => t.id === r.memberId);
+    const typeInfo = LEAVE_TYPES.find(l => l.key === r.type);
+    return `<div class="person-row">
+      <div class="avatar av-${m.office}">${m.initials}</div>
+      <div class="person-info"><div class="person-name">${m.name}</div><div class="person-role">${r.from === r.to ? r.from : r.from + ' → ' + r.to} · ${r.days} day${r.days !== 1 ? 's' : ''}</div></div>
+      <span class="badge badge-${r.type}">${typeInfo.label}</span>
+      <span class="badge badge-${r.status}" style="margin-left:4px;">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderApplyForm() {
+  const sel = document.getElementById('apply-as');
+  sel.innerHTML = '<option value="">Select team member...</option>' + TEAM.map(m => `<option value="${m.id}">${m.name} (${m.office.toUpperCase()})</option>`).join('');
+  const cover = document.getElementById('cover-person');
+  cover.innerHTML = '<option value="">Select cover person...</option>' + TEAM.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  document.getElementById('leave-type-grid').innerHTML = LEAVE_TYPES.map(lt =>
+    `<div class="leave-type-opt ${lt.key === selectedLeaveType ? 'selected' : ''}" onclick="selectLeaveType('${lt.key}',this)">
+      <div class="lt-icon">${lt.icon}</div><div class="lt-name">${lt.label}</div>
+      <div class="lt-balance">${lt.usesBalance ? 'Uses annual balance' : 'No balance deducted'}</div>
+    </div>`).join('');
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('leave-from').value = today;
+  document.getElementById('leave-to').value = today;
+  calcDays();
+}
+
+function selectLeaveType(key, el) {
+  selectedLeaveType = key;
+  document.querySelectorAll('.leave-type-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  updateApplyBalance();
+}
+
+function calcDays() {
+  const from = new Date(document.getElementById('leave-from').value + 'T00:00:00');
+  const to = new Date(document.getElementById('leave-to').value + 'T00:00:00');
+  if (isNaN(from) || isNaN(to) || to < from) { document.getElementById('days-count').textContent = '0'; return; }
+  let days = 0;
+  for (let d = new Date(from); d <= to; d.setDate(d.getDate()+1)) {
+    if (d.getDay() !== 0 && d.getDay() !== 6) days++;
+  }
+  document.getElementById('days-count').textContent = days;
+  updateApplyBalance();
+}
+
+function updateApplyBalance() {
+  const mid = parseInt(document.getElementById('apply-as').value);
+  const m = TEAM.find(t => t.id === mid);
+  const days = parseInt(document.getElementById('days-count').textContent) || 0;
+  const lt = LEAVE_TYPES.find(l => l.key === selectedLeaveType);
+  if (m) {
+    const bal = getBalance(m);
+    document.getElementById('bal-preview').textContent = bal.toFixed(2);
+    if (lt && lt.usesBalance) {
+      const after = bal - days;
+      document.getElementById('bal-after').textContent = after.toFixed(2);
+      document.getElementById('bal-after').style.color = after < 0 ? '#E24B4A' : 'var(--color-text-primary)';
+    } else {
+      document.getElementById('bal-after').textContent = bal.toFixed(2);
+      document.getElementById('bal-after').style.color = 'var(--color-text-primary)';
+    }
+  } else {
+    document.getElementById('bal-preview').textContent = '—';
+    document.getElementById('bal-after').textContent = '—';
+  }
+}
+
+function submitLeave() {
+  const mid = parseInt(document.getElementById('apply-as').value);
+  const from = document.getElementById('leave-from').value;
+  const to = document.getElementById('leave-to').value;
+  const coverId = parseInt(document.getElementById('cover-person').value) || null;
+  const aware = document.getElementById('cover-aware').value;
+  const notes = document.getElementById('leave-notes').value;
+  const days = parseInt(document.getElementById('days-count').textContent) || 0;
+  if (!mid) { toast('Please select a team member.', '#E24B4A'); return; }
+  if (!from || !to || days === 0) { toast('Please select valid dates.', '#E24B4A'); return; }
+  const today = new Date().toISOString().split('T')[0];
+  const newId = 'R' + String(requests.length + 1).padStart(3,'0');
+  requests.push({ id:newId, memberId:mid, type:selectedLeaveType, from, to, days, cover:coverId, coverAware:aware==='yes', notes, status:'pending', submitted:today });
+  saveRequests();
+  updateBadge();
+  toast('Leave request submitted for approval.');
+  clearForm();
+}
+
+function clearForm() {
+  document.getElementById('apply-as').value = '';
+  document.getElementById('leave-notes').value = '';
+  selectedLeaveType = 'annual';
+  renderApplyForm();
+}
+
+function renderApprovals() {
+  const filtered = approvalsFilter === 'pending'
+    ? requests.filter(r => r.status === 'pending')
+    : [...requests].sort((a,b) => b.submitted.localeCompare(a.submitted));
+  const el = document.getElementById('approvals-list');
+  if (!filtered.length) { el.innerHTML = `<div class="empty-state">No ${approvalsFilter === 'pending' ? 'pending ' : ''}requests found.</div>`; return; }
+  el.innerHTML = filtered.map(r => {
+    const m = TEAM.find(t => t.id === r.memberId);
+    const coverM = r.cover ? TEAM.find(t => t.id === r.cover) : null;
+    const typeInfo = LEAVE_TYPES.find(l => l.key === r.type);
+    const isApproved = r.status === 'approved';
+    return `<div class="request-card">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="avatar av-${m.office}" style="width:28px;height:28px;font-size:10px;">${m.initials}</div>
+          <span style="font-size:14px;font-weight:500;color:var(--color-text-primary);">${m.name}</span>
+          <span class="badge badge-${r.type}">${typeInfo.label}</span>
+          <span class="badge badge-${r.status}">${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span>
+        </div>
+        <div class="request-meta">📅 ${r.from === r.to ? r.from : r.from + ' to ' + r.to} · <strong>${r.days} working day${r.days !== 1 ? 's' : ''}</strong> · Cover: ${coverM ? coverM.name : 'None'} ${r.coverAware ? '(aware)' : '(not yet notified)'}${r.notes ? ' · "' + r.notes + '"' : ''}</div>
+        ${r.status !== 'pending' ? `<div class="request-meta" style="margin-top:4px;">${isApproved ? '✓ Approved' : '✗ Declined'} by ${r.decidedBy} on ${r.decidedOn}</div>` : ''}
+      </div>
+      <div class="request-actions">
+        ${r.status === 'pending' ? `<button class="btn btn-sm btn-primary" onclick="decide('${r.id}','approved')">Approve</button><button class="btn btn-sm btn-danger" onclick="decide('${r.id}','rejected')">Decline</button>` : ''}
+        ${isApproved ? `<button class="btn btn-sm btn-pdf" onclick="exportPDF('${r.id}')">⬇ Export PDF</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function decide(id, status) {
+  const r = requests.find(x => x.id === id);
+  if (!r) return;
+  r.status = status;
+  r.decidedBy = 'Tari Mutepfa';
+  r.decidedOn = new Date().toISOString().split('T')[0];
+  if (status === 'approved') {
+    const m = TEAM.find(t => t.id === r.memberId);
+    const lt = LEAVE_TYPES.find(l => l.key === r.type);
+    if (lt && lt.usesBalance) m.taken += r.days;
+    if (r.type === 'sick') m.sick += r.days;
+  }
+  saveRequests();
+  updateBadge();
+  toast(status === 'approved' ? '✓ Request approved.' : 'Request declined.');
+  renderApprovals();
+  renderCalendar();
+}
+
+function filterApprovals(f, btn) {
+  approvalsFilter = f;
+  document.querySelectorAll('#tab-approvals .btn-sm:not(.btn-pdf)').forEach(b => { b.style.borderColor = ''; b.style.color = ''; });
+  btn.style.borderColor = '#1D9E75'; btn.style.color = '#1D9E75';
+  renderApprovals();
+}
+
+function renderBalances() {
+  document.getElementById('balances-body').innerHTML = TEAM.map(m => {
+    const bal = getBalance(m);
+    const pct = Math.min(100, Math.round((bal / m.annualEntitled) * 100));
+    const cls = pct < 20 ? 'danger' : pct < 40 ? 'warn' : '';
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar av-${m.office}" style="width:26px;height:26px;font-size:9px;">${m.initials}</div>${m.name}</div></td>
+      <td><span style="font-size:11px;">${m.office === 'zw' ? '🇿🇼 Zimbabwe' : '🇿🇲 Zambia'}</span></td>
+      <td>${m.annualEntitled}</td>
+      <td style="color:#1D9E75;">+${(m.bfwd + m.accrued).toFixed(2)}</td>
+      <td style="color:#E24B4A;">-${m.taken.toFixed(2)}</td>
+      <td><strong>${bal.toFixed(2)}</strong><div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div></td>
+      <td>${m.sick}</td>
+    </tr>`;
+  }).join('');
+  const lowBal = TEAM.filter(m => getBalance(m) < 3);
+  const highBal = TEAM.filter(m => getBalance(m) > 10);
+  document.getElementById('balance-health').innerHTML =
+    (lowBal.length ? `<div style="margin-bottom:10px;"><div class="section-title" style="color:#A32D2D;">Low balance alert (&lt;3 days)</div>${lowBal.map(m=>`<div style="font-size:13px;padding:4px 0;">${m.name} — <strong>${getBalance(m).toFixed(2)} days remaining</strong></div>`).join('')}</div>` : '') +
+    (highBal.length ? `<div><div class="section-title" style="color:#854F0B;">High accrual (&gt;10 days)</div>${highBal.map(m=>`<div style="font-size:13px;padding:4px 0;">${m.name} — <strong>${getBalance(m).toFixed(2)} days accumulated</strong> — consider encouraging time off</div>`).join('')}</div>` : '') +
+    (!lowBal.length && !highBal.length ? '<div style="font-size:13px;color:var(--color-text-secondary);">All balances look healthy.</div>' : '');
+}
+
+function exportPDF(reqId) {
+  const r = requests.find(x => x.id === reqId);
+  if (!r || r.status !== 'approved') return;
+  const m = TEAM.find(t => t.id === r.memberId);
+  const coverM = r.cover ? TEAM.find(t => t.id === r.cover) : null;
+  const typeInfo = LEAVE_TYPES.find(l => l.key === r.type);
+  const typeChecks = LEAVE_TYPES.map(lt => {
+    const checked = lt.key === r.type;
+    return `<td style="padding:8px 14px;text-align:center;background:${checked ? '#d4edda' : '#f8f8f8'};border:1px solid #ccc;font-weight:${checked ? '700' : '400'};color:${checked ? '#155724' : '#333'};font-size:13px;">${checked ? '✔ ' : ''}${lt.label}</td>`;
+  });
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Leave Application — ${m.name}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Inter', sans-serif; font-size:13px; color:#111; background:#fff; padding:40px; }
+    .header { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #1a3a5c; padding-bottom:16px; margin-bottom:24px; }
+    .logo-box { width:52px; height:52px; background:#1a3a5c; border-radius:6px; display:flex; align-items:center; justify-content:center; }
+    .logo-box span { color:white; font-size:18px; font-weight:700; }
+    .company-name { font-size:15px; font-weight:700; color:#1a3a5c; line-height:1.3; }
+    .company-sub { font-size:11px; color:#555; }
+    .approved-stamp { background:#d4edda; color:#155724; border:2px solid #28a745; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; display:inline-block; }
+    .section { margin-bottom:20px; }
+    .section-heading { background:#1a3a5c; color:white; padding:6px 12px; font-size:12px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; }
+    .field-table { width:100%; border-collapse:collapse; }
+    .field-table td { border:1px solid #ccc; padding:8px 12px; }
+    .field-label { background:#f0f0f0; font-weight:600; color:#333; width:35%; font-size:12px; }
+    .leave-type-table { width:100%; border-collapse:collapse; }
+    .leave-type-table td { border:1px solid #ccc; }
+    .sig-table { width:100%; border-collapse:collapse; }
+    .sig-table th { background:#e8e8e8; border:1px solid #ccc; padding:7px 10px; font-size:11px; font-weight:600; text-align:left; }
+    .sig-table td { border:1px solid #ccc; padding:10px; font-size:12px; height:52px; vertical-align:top; }
+    .sig-signed { font-style:italic; color:#155724; font-size:12px; margin-top:4px; }
+    .audit-box { background:#f9f9f9; border:1px solid #ddd; border-radius:4px; padding:12px; margin-top:16px; font-size:11px; color:#555; }
+    .audit-row { display:flex; gap:16px; padding:4px 0; border-bottom:1px solid #eee; }
+    .audit-row:last-child { border-bottom:none; }
+    .audit-label { font-weight:600; color:#333; width:140px; flex-shrink:0; }
+    .footer { margin-top:30px; border-top:1px solid #ccc; padding-top:12px; display:flex; justify-content:space-between; font-size:10px; color:#888; }
+    @media print { body { padding:20px; } }
+  </style></head>
+  <body>
+    <div class="header">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="logo-box"><span>LOA</span></div>
+        <div><div class="company-name">LABOUR OUTSOURCING AFRICA</div><div class="company-sub">Global Talent Acquisition Department</div></div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:#777;">Leave Application Form</div>
+        <div style="font-size:13px;font-weight:700;color:#1a3a5c;">Ref: ${r.id}</div>
+        <div style="margin-top:6px;"><span class="approved-stamp">✔ APPROVED</span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-heading">Employee details</div>
+      <table class="field-table">
+        <tr><td class="field-label">Full name</td><td>${m.name}</td><td class="field-label">Department</td><td>Talent Acquisition</td></tr>
+        <tr><td class="field-label">Position</td><td>${m.role}</td><td class="field-label">Office</td><td>${m.office === 'zw' ? 'Zimbabwe' : 'Zambia'}</td></tr>
+      </table>
+    </div>
+    <div class="section">
+      <div class="section-heading">Type of leave</div>
+      <table class="leave-type-table"><tr>${typeChecks.join('')}</tr></table>
+    </div>
+    <div class="section">
+      <div class="section-heading">Leave period</div>
+      <table class="field-table">
+        <tr><td class="field-label">From</td><td>${r.from}</td><td class="field-label">To</td><td>${r.to}</td></tr>
+        <tr><td class="field-label">Working days</td><td><strong>${r.days}</strong></td><td class="field-label">Annual balance remaining</td><td><strong>${getBalance(m).toFixed(2)} days</strong></td></tr>
+      </table>
+    </div>
+    <div class="section">
+      <div class="section-heading">Coverage</div>
+      <table class="field-table">
+        <tr><td class="field-label">Team member covering</td><td>${coverM ? coverM.name : 'Not specified'}</td><td class="field-label">Position</td><td>${coverM ? coverM.role : '—'}</td></tr>
+        <tr><td class="field-label">Cover person aware</td><td>${r.coverAware ? 'Yes' : 'No'}</td><td class="field-label">Notes</td><td>${r.notes || '—'}</td></tr>
+      </table>
+    </div>
+    <div class="section">
+      <div class="section-heading">Signatories</div>
+      <table class="sig-table">
+        <thead><tr><th style="width:20%">Role</th><th style="width:30%">Name</th><th style="width:30%">Signature</th><th style="width:20%">Date</th></tr></thead>
+        <tbody>
+          <tr><td>Applicant</td><td><strong>${m.name}</strong></td><td><div class="sig-signed">${m.name}</div></td><td style="font-size:11px;color:#555;">${r.submitted}</td></tr>
+          <tr><td>Approved by</td><td><strong>${r.decidedBy}</strong></td><td><div class="sig-signed">${r.decidedBy}</div></td><td style="font-size:11px;color:#555;">${r.decidedOn}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="audit-box">
+      <div style="font-weight:600;color:#333;margin-bottom:8px;font-size:12px;">Document audit trail</div>
+      <div class="audit-row"><span class="audit-label">Document ID</span><span>${r.id}-LOA-${m.id}</span></div>
+      <div class="audit-row"><span class="audit-label">Submitted by</span><span>${m.name} · ${r.submitted}</span></div>
+      <div class="audit-row"><span class="audit-label">Approved by</span><span>${r.decidedBy} · ${r.decidedOn}</span></div>
+      <div class="audit-row"><span class="audit-label">Status</span><span style="color:#155724;font-weight:600;">Completed — Approved</span></div>
+    </div>
+    <div class="footer">
+      <span>Labour Outsourcing Africa · Global Talent Acquisition</span>
+      <span>Generated: ${new Date().toISOString().split('T')[0]} · Ref: ${r.id}</span>
+    </div>
+    <script>window.onload = function() { window.print(); }<\/script>
+  </body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  if (!win) alert('Please allow pop-ups to export PDF.');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+loadRequests();
+</script>
+</body>
+</html>
